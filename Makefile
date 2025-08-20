@@ -6,7 +6,7 @@ install:
 	cp -p ./lapp /usr/bin/lapp
 	chmod 755 /usr/bin/lapp
 remove:
-	rm -rf /usr/share/man1/mlapp
+	rm -rf /usr/share/man/man1/lapp*
 	rm -rf /usr/bin/lapp
 
 
