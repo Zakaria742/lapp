@@ -99,7 +99,7 @@ display_list(){
 	echo -e "\x1b[0m"
 
 	Game_path=$( sed -n "$(( (2*count+1)  ))p" ~/.lapp.txt)
-	echo "Count: $count, Games_count: $games_count, Possible_displayed_games: $DISPLAYED_GAMES, Terminal_height: $(tput lines)"
+	echo "Count: $count, Total_games: $games_count"
 }
 
 display_list
