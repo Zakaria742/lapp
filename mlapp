@@ -1,0 +1,21 @@
+.\" Manpage for lapp.
+.\" Github repository: https://github.com/Zakaria742/lapp.git
+
+.TH lapp 1 "20 August 2025" "1.0" "lapp man page"
+.SH NAME
+lapp \- CLI game launcher
+.SH SYNOPSIS
+lapp -c [GAMES_DIR]
+.SH DESCRIPTION
+lapp is a Command line interface game launcher made with shell, it uses wine as the compatibility layer to launch and manage the game.
+.SH OPTIONS
+\fB\-c\fR    set the path to the games directory, (stored in ~/.config/lgame/games.conf)
+.SH EXIT STATUS
+.TP
+.B 0
+Exit success
+.TP
+.B -1
+Games path wasn't found
+.SH AUTHOR
+Written by Zakaria742. (github : https://github.com/Zakaria742)

@@ -126,9 +126,11 @@ do
 		        display_list
 		    fi
 		;;
-        esac
-   if [[ $char == $'\0' ]]; then
-        wine "$Game_path" &
-	exit
-   fi
+	    $'out')
+		    exit 0;;
+	    $'\0')
+        	    wine "$Game_path" &
+		    exit 0;;
+	esac
+
 done
