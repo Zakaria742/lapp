@@ -25,7 +25,7 @@ then
 	sleep 1s
 else
     echo -e "\x1b[37mgames.conf file is empty.\x1b[0m"
-    echo "usage: lgames -c <path to the games/programes directory>"
+    echo "usage: lapp -c <path to the games/programes directory>"
     echo "the path is then stored in ~/.config/lgames/games.conf so you can call it again without an arguement"
     exit -1
 fi
