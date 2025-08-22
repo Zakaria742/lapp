@@ -25,9 +25,9 @@ then
 	sleep 1s
 else
     echo -e "\x1b[37mgames.conf file is empty.\x1b[0m"
-    echo "usage: lapp -c <path to the games/programes directory>"
+    echo "usage: lgame -c <path to the games/programes directory>"
     echo "the path is then stored in ~/.config/lgames/games.conf so you can call it again without an arguement"
-    exit -1
+    exit 255
 fi
 
 
@@ -40,46 +40,48 @@ Game_path=""
 
 create_list(){
 	clear
-	if [[ -f ~/.lapp.txt ]];then
-	     rm ~/.lapp.txt
+	if [[ -f ~/.lgame.txt ]];then
+	     rm ~/.lgame.txt
 	fi
-	touch ~/.lapp.txt
+	touch ~/.lgame.txt
 
-	for (( i = $count ; i < $games_count ; i++));
+	for (( i = count ; i < games_count ; i++));
 do
         first_game=$( sed -n "$i p" ~/.config/lgames/Games.txt )
 
-        first_character=$( echo $first_game | cut -c 1 )
+        first_character=$( echo "$first_game" | cut -c 1 )
 	
-	Game_exe=$( ls -R "$GAMES_DIR"/"$first_game" 2>/dev/null | grep -i -P "^(?=.*$first_game)(?=.*.exe)" | sed -n "1 p" )
+
+
+	Game_exe=$( find  "$GAMES_DIR"/"$first_game" -iname "$first_game*.exe" -printf "%f\n" | sed -n "1p")
 	
 	if [[ -z $Game_exe ]]; then
-            Game_exe=$( ls "$GAMES_DIR"/"$first_game" 2>/dev/null | grep -i -P "^(?=.*$first_character)(?=.*.exe)" | sed -n "1 p" )
+            Game_exe=$( find "$GAMES_DIR"/"$first_game" -iname "$first_character*.exe" -printf "%f\n" | sed -n "1p")
 	fi
+
 	if [ -z "$Game_exe" ]
         then
-            Game_exe=$( ls -R "$GAMES_DIR"/"$first_game" 2>/dev/null | grep -i ".exe$" | sed -n "1 p" )
+            Game_exe=$(find "$GAMES_DIR"/"$first_game" -iname "*.exe" -printf "%f\n" | sort -t '\0' -n | sed -n "1 p")
         fi
 
-	
 	if [ -z "$Game_exe" ]
         then
-            echo -e "Couldn't find the following game : $first_game\n" >> ~/.lapp.txt
+            echo -e "Couldn't find the following game : $first_game\n" >> ~/.lgame.txt
 	    games_count=$(( games_count - 1 ))
             continue
         fi
 
-            Game_path=$( find "$GAMES_DIR"/"$first_game" -name "$Game_exe" | sed -n "1p" | cut -c 30- )
-	echo -e "$Game_path\n[APP] : [$Game_exe]\n-------------------------\n" >> ~/.lapp.txt
+            local Game_path=$( find "$GAMES_DIR"/"$first_game" -iname "$Game_exe" | sed -n "1p" | cut -c 30- )
+	echo -e "$Game_path\n[APP] : [$Game_exe]\n-------------------------\n" >> ~/.lgame.txt
         
 done
 }
 
 create_list
 
-list_count=$(( $(wc -l ~/.lapp.txt | cut -b -2)/2 - 1 ))
+list_count=$(( $(wc -l ~/.lgame.txt | cut -b -2)/2 - 1 ))
 
-#displaying the list found in ~/.lapp.txt
+#displaying the list found in ~/.lgame.txt
 display_list(){
 	clear
 	DISPLAYED_GAMES=$(tput lines)
@@ -97,32 +99,40 @@ display_list(){
 
 	local SAP=4 #space between apps
 	local c=$((SAP*count))
-	sed -n "$(( c-2 )),$(( (DISPLAYED_GAMES/2) + c )) p" ~/.lapp.txt
-	
-	echo -e "\x1b[32m\x1b[1m"
-	sed -n "$(( c - 2 )),$c p" ~/.lapp.txt
-	echo -e "\x1b[0m"
 
-	Game_path="$GAMES_DIR/$( sed -n "$((c-3)) p" ~/.lapp.txt)"
+	sed -n "$(( c-2 )),$(( (DISPLAYED_GAMES) + c )) p" ~/.lgame.txt
+	
+	echo -e "\e[32m\e[1m"
+	sed -n "$(( c - 2 )),$c p" ~/.lgame.txt
+	echo -e "\e[0m"
+
+	Game_path="$GAMES_DIR/$( sed -n "$((c-3)) p" ~/.lgame.txt)"
 	echo -e "Count: $count, Total_games: $games_count\ntype 'out' in order to exit"
+	
 }
 
 Search(){
-	echo "GC : $list_count"
-    local line_number=$(cat ~/.lapp.txt | grep -i -n "$1" | sed -n "1 p" | grep -E -o "\b('$list_count'|[1-9]?[0-9]):" | tr -d ':')
-    Game=$(sed -n "$line_number,$(( line_number+2 )) p" ~/.lapp.txt)
-    Game_path="$GAMES_DIR/$(sed -n "$line_number p" ~/.lapp.txt)"
+
+    local line_number=$( grep -i -n "$1" < ~/.lgame.txt | sed -n "1 p" | grep -E -o "\b('$list_count'|[1-9]?[0-9]):" | tr -d ':')
+    
+    if [[ -z $line_number ]];then
+	echo "GAME WAS NOT FOUND!"
+        sleep 1
+        display_list
+	return 
+    fi
+
+    Game=$(sed -n "$line_number,$(( line_number+2 )) p" ~/.lgame.txt)
+    Game_path="$GAMES_DIR/$(sed -n "$line_number p" ~/.lgame.txt)"
+
     if [[ -n $Game ]];then
 	clear
 	echo "$Game"
-	echo -e "GAME WAS FOUND!\nPATH : $Game_path\nLAUNCHING..."
+	echo -e "GAME WAS FOUND!\nPATH : $Game_path\nLAUNCHING...\n$line_number"
 	sleep 2s
-	wine "$Game_path"
+	wine "$Game_path" &
 	exit 0
 
-    else
-	echo "GAME WAS NOT FOUND!"
-	display_list
     fi
 }
 
@@ -153,12 +163,12 @@ do
 	    $'out')
 		    exit 0;;
 	    $'\0')
-		    echo "PATH : $Game_path"
+		    echo "STARTING THE GAME"
         	    wine "$Game_path" &
 		    exit 0;;
 	    $'sss')
 		    echo "Starting Search : "
-		    read term
+		    read -r term
 		    Search "$term";;
 	esac
 
