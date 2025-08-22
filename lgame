@@ -24,7 +24,7 @@ then
         echo "Searching in the path: $GAMES_DIR"
 	sleep 1s
 else
-    echo -e "\x1b[37mgames.conf file is empty.\x1b[0m"
+    echo -e "\e[37mgames.conf file is empty.\e[0m"
     echo "usage: lgame -c <path to the games/programes directory>"
     echo "the path is then stored in ~/.config/lgames/games.conf so you can call it again without an arguement"
     exit 255
@@ -100,7 +100,7 @@ display_list(){
 	local SAP=4 #space between apps
 	local c=$((SAP*count))
 
-	sed -n "$(( c-2 )),$(( (DISPLAYED_GAMES) + c )) p" ~/.lgame.txt
+	sed -n "$(( c-2 )),$(( (DISPLAYED_GAMES*6) + c )) p" ~/.lgame.txt
 	
 	echo -e "\e[32m\e[1m"
 	sed -n "$(( c - 2 )),$c p" ~/.lgame.txt
