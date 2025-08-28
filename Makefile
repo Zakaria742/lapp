@@ -3,8 +3,8 @@ all:
 
 install:
 	cp -p ./lgame.1 /usr/share/man/man1
-	cp -p ./lgame /usr/bin/lapp
-	chmod 755 /usr/bin/lapp
+	cp -p ./lgame /usr/bin/lgame
+	chmod 755 /usr/bin/lgame
 remove:
 	rm -rf /usr/share/man/man1/lgame*
 	rm -rf /usr/bin/lgame
