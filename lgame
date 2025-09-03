@@ -69,7 +69,7 @@ do
             continue
         fi
 
-            local Game_path=$( find "$GAMES_DIR"/"$first_game" -iname "$Game_exe" | sed -n "1p" | cut -c 30- )
+            local Game_path=$( find "$GAMES_DIR"/"$first_game" -iname "$Game_exe" | sort -r| sed -n "1p" | cut -c 30- )
 	echo -e "$Game_path\n[APP] : [$Game_exe]\n-------------------------\n" >> ~/.lgame.txt
         
 done
@@ -128,6 +128,8 @@ Search(){
 	echo "$Game"
 	echo -e "GAME WAS FOUND!\nPATH : $Game_path\nLAUNCHING...\n$line_number"
 	sleep 2s
+	game_dir=$(dirname "$Game_path")
+	cd "$game_dir"
 	wine "$Game_path" &
 	exit 0
 
@@ -162,6 +164,8 @@ do
 		    exit 0;;
 	    $'\0')
 		    echo "STARTING THE GAME"
+		    game_dir=$(dirname "$Game_path")
+		    cd "$game_dir"
         	    wine "$Game_path" &
 		    exit 0;;
 	    $'sss')
