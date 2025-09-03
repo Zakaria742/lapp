@@ -33,7 +33,7 @@ fi
 
 ls "$GAMES_DIR" > ~/.config/lgames/Games.txt
 
-games_count=$(( $(wc -l ~/.config/lgames/Games.txt | cut -b -2) - 1 ))
+games_count=$(( $(wc -l ~/.config/lgames/Games.txt | cut -b -2) ))
 DISPLAYED_GAMES=$(tput lines)
 count=1
 Game_path=""
@@ -45,14 +45,12 @@ create_list(){
 	fi
 	touch ~/.lgame.txt
 
-	for (( i = count ; i < games_count ; i++));
+	for (( i = count ; i <= games_count ; i++));
 do
         first_game=$( sed -n "$i p" ~/.config/lgames/Games.txt )
 
         first_character=$( echo "$first_game" | cut -c 1 )
 	
-
-
 	Game_exe=$( find  "$GAMES_DIR"/"$first_game" -iname "$first_game*.exe" -printf "%f\n" | sed -n "1p")
 	
 	if [[ -z $Game_exe ]]; then
