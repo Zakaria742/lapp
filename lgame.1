@@ -1,20 +1,24 @@
 .\" Manpage for lgame.
 .\" Github repository: https://github.com/Zakaria742/lgame.git
 
-.TH lgame 1 "20 August 2025" "1.0" "lapp man page"
+.TH lgame 1 "20 August 2025" "1.0" "lgame man page"
 .SH NAME
 lgame \- CLI game launcher
 .SH SYNOPSIS
-lgame -c [GAMES_DIR]
+lgame -p [GAMES_DIR]
 .SH DESCRIPTION
 lgame is a Command line interface game launcher made with shell, it uses wine as the compatibility layer to launch and manage the game.
 .SH OPTIONS
-\fB\-c\fR    set the path to the games directory, (stored in ~/.config/lgame/games.conf)
+\fB\-p\fR    set the path to the games directory, (stored in ~/.config/lgame/games.conf)
 .SH COMMANDS
 .TP
 \fBout\fR exit the launcher
 .TP
 \fBsss\fR start search
+.TP
+\fBpro\fR Use proton (if found)
+.TP
+\fBwin\fR Use wine
 .SH EXIT STATUS
 .TP
 .B 0

@@ -1,97 +1,101 @@
 #!/bin/bash
 
 
-if [[ ! -d ~/.config/lgames ]]
+#Making configs folder and setting the path.
+if [[ -d ~/.config/lgames ]]
 then
-       mkdir ~/.config/lgames
-       touch ~/.config/lgames/games.conf
-fi
-if [[ ! -e ~/.config/lgames/games.conf ]]
-then
-    touch ~/.config/lgames/games.conf
+	if [[ ! -f ~/.config/lgames/games.conf ]]
+	then
+		touch ~/.config/lgames/games.conf
+	fi
+else
+	mkdir ~/.config/lgames
+	touch ~/.config/lgames/games.conf
 fi
 
-if [[ $1 == "-c" ]];then
-    echo "$2" > ~/.config/lgames/games.conf
-    GAMES_DIR=$2
-    echo "PATH HAS BEEN SET!"
+if [[ $1 == "-p" ]];then
+	echo "$2" > ~/.config/lgames/games.conf
+	echo "PATH HAS BEEN SET!"
 fi
 
 GAMES_DIR=$(cat ~/.config/lgames/games.conf)
 
 if [[ -n $GAMES_DIR ]]
 then
-        echo "Searching in the path: $GAMES_DIR"
-	sleep 1s
+	echo "Searching in the path: $GAMES_DIR"
+	echo "If a game is not working, write 'pro' in order to use proton"
+	sleep 2s
 else
-    echo -e "\e[37mgames.conf file is empty.\e[0m"
-    echo "usage: lgame -c <path to the games/programes directory>"
-    echo "the path is then stored in ~/.config/lgames/games.conf so you can call it again without an arguement"
-    exit 255
+	echo -e "\e[37mgames.conf file is empty.\e[0m"
+	echo "usage: lgame -p <path to the games/programes directory>"
+	echo "the path is then stored in ~/.config/lgames/games.conf so you can call it again without an arguement"
+	exit 255
 fi
-
 
 ls "$GAMES_DIR" > ~/.config/lgames/Games.txt
 
 games_count=$(( $(wc -l ~/.config/lgames/Games.txt | cut -b -2) ))
-DISPLAYED_GAMES=$(tput lines)
 count=1
 Game_path=""
 
 create_list(){
-	clear
 	if [[ -f ~/.lgame.txt ]];then
-	     rm ~/.lgame.txt
+		rm ~/.lgame.txt
 	fi
 	touch ~/.lgame.txt
 
 	for (( i = count ; i <= games_count ; i++));
-do
-        first_game=$( sed -n "$i p" ~/.config/lgames/Games.txt )
+	do
+		first_game=$( sed -n "$i p" ~/.config/lgames/Games.txt )
 
-        first_character=$( echo "$first_game" | cut -c 1 )
-	
-	Game_exe=$( find  "$GAMES_DIR"/"$first_game" -iname "$first_game*.exe" -printf "%f\n" | sed -n "1p")
-	
-	if [[ -z $Game_exe ]]; then
-            Game_exe=$( find "$GAMES_DIR"/"$first_game" -iname "$first_character*.exe" -printf "%f\n" | sed -n "1p")
-	fi
+		first_character=$( echo "$first_game" | cut -c 1 )
 
-	if [ -z "$Game_exe" ]
-        then
-            Game_exe=$(find "$GAMES_DIR"/"$first_game" -iname "*.exe" -printf "%f\n" | sort -t '\0' -n | sed -n "1 p")
-        fi
+		#First try
+		Game_exe=$( find  "$GAMES_DIR"/"$first_game" -iname "$first_game*.exe" -printf "%f\n" | sed -n "1p")
+		if [[ -z $Game_exe ]]; then
+			#Second try
+			Game_exe=$( find "$GAMES_DIR"/"$first_game" -iname "$first_character*.exe" -printf "%f\n" | sed -n "1p")
+		fi
 
-	if [ -z "$Game_exe" ]
-        then
-            echo -e "Couldn't find the following game : $first_game\n" >> ~/.lgame.txt
-	    games_count=$(( games_count - 1 ))
-            continue
-        fi
+		if [ -z "$Game_exe" ]
+		then
+			#Third try
+			Game_exe=$(find "$GAMES_DIR"/"$first_game" -iname "*.exe" -printf "%f\n" | sort -t '\0' -n | sed -n "1 p")
+		fi
 
-            local Game_path=$( find "$GAMES_DIR"/"$first_game" -iname "$Game_exe" | sort -r| sed -n "1p" | cut -c 30- )
-	echo -e "$Game_path\n[APP] : [$Game_exe]\n-------------------------\n" >> ~/.lgame.txt
-        
-done
+		if [ -z "$Game_exe" ]
+		then
+			echo -e "Couldn't find the following game : $first_game\nPlease check if the folder is not empty or launch the game manually" >> ~/.lgame.txt
+			games_count=$(( games_count - 1 ))
+			continue
+		fi
+
+		local Game_path=$( find "$GAMES_DIR"/"$first_game" -iname "$Game_exe" | sort -r| sed -n "1p" | cut -c 30- )
+		echo -e "$Game_path\n[APP] : [$Game_exe]\n-------------------------\n" >> ~/.lgame.txt
+
+	done
 }
 
 create_list
 
-list_count=$(( $(wc -l ~/.lgame.txt | cut -b -2)/2 - 1 ))
+c_layer=wine
+
+
+list_count=$(( $(wc -l ~/.lgame.txt | grep -iEo "\b([1-9]?[0-9])")/2 - 1 ))
 
 #displaying the list found in ~/.lgame.txt
 display_list(){
 	clear
-	DISPLAYED_GAMES=$(tput lines)
+	DISPLAYED_GAMES=5
 	if [[ $DISPLAYED_GAMES -ge $list_count ]];then
 		DISPLAYED_GAMES=$list_count
 	fi
 
 	if [[ ! $(( DISPLAYED_GAMES % 2 )) -eq 0 ]];then
 		if [[ $DISPLAYED_GAMES -gt 0 ]];then
-		    DISPLAYED_GAMES=$((DISPLAYED_GAMES-1))
+			DISPLAYED_GAMES=$((DISPLAYED_GAMES-1))
 		else
-		    DISPLAYED_GAMES=$((DISPLAYED_GAMES+1))
+			DISPLAYED_GAMES=$((DISPLAYED_GAMES+1))
 		fi
 	fi
 
@@ -99,41 +103,45 @@ display_list(){
 	local c=$((SAP*count))
 
 	sed -n "$(( c-2 )),$(( (DISPLAYED_GAMES*6) + c )) p" ~/.lgame.txt
-	
-	echo -e "\e[32m\e[1m"
-	sed -n "$(( c - 2 )),$c p" ~/.lgame.txt
+
+	echo -e "\e[33m\e[1m"
+	sed -n "$(( c - 2 )),$((c-2)) p" ~/.lgame.txt
 	echo -e "\e[0m"
 
 	Game_path="$GAMES_DIR/$( sed -n "$((c-3)) p" ~/.lgame.txt)"
 	echo -e "Count: $count, Total_games: $games_count\ntype 'out' in order to exit"
-	
+
 }
 
 Search(){
 
-    local line_number=$( grep -i -n "$1" < ~/.lgame.txt | sed -n "1 p" | grep -E -o "\b('$list_count'|[1-9]?[0-9]):" | tr -d ':')
-    
-    if [[ -z $line_number ]];then
-	echo "GAME WAS NOT FOUND!"
-        sleep 1
-        display_list
-	return 
-    fi
+	local line_number=$( grep -i -n "$1" < ~/.lgame.txt | sed -n "1 p" | grep -E -o "\b('$list_count'|[1-9]?[0-9]):" | tr -d ':')
 
-    Game=$(sed -n "$line_number,$(( line_number+2 )) p" ~/.lgame.txt)
-    Game_path="$GAMES_DIR/$(sed -n "$line_number p" ~/.lgame.txt)"
+	if [[ -z $line_number ]];then
+		echo "GAME NOT FOUND!"
+		sleep 1
+		display_list
+		return 
+	fi
 
-    if [[ -n $Game ]];then
-	clear
-	echo "$Game"
-	echo -e "GAME WAS FOUND!\nPATH : $Game_path\nLAUNCHING...\n$line_number"
-	sleep 2s
-	game_dir=$(dirname "$Game_path")
-	cd "$game_dir"
-	wine "$Game_path" &
-	exit 0
+	Game=$(sed -n "$line_number,$(( line_number+2 )) p" ~/.lgame.txt)
+	Game_path="$GAMES_DIR/$(sed -n "$line_number p" ~/.lgame.txt)"
 
-    fi
+	if [[ -n $Game ]];then
+		clear
+		echo "$Game"
+		echo -e "GAME FOUND!\nPATH : $Game_path\nLAUNCHING..."
+		sleep 2s
+		game_dir=$(dirname "$Game_path")
+		cd "$game_dir"
+		if [[ $c_layer == $proton ]];then
+			"$c_layer" run "$Game_path"
+			exit 0
+		fi
+		$c_layer "$Game_path"
+		exit 0
+
+	fi
 }
 
 display_list
@@ -143,35 +151,58 @@ display_list
 while :
 do
 
-    read -rsn3 char
-    echo "$char"
-        case $char in
-            $'\e[A')
-		    if [[ $count -gt 1 ]];then
-		        count=$(( (count - 1) ))
-		        display_list
-		    fi
-		    ;;
+	read -rsn3 char
+	echo "$char"
+	case $char in
+		$'\e[A')
+			if [[ $count -gt 1 ]];then
+				count=$(( (count - 1) ))
+				display_list
+			fi
+			;;
 
-            $'\e[B')
-		    if [[ $count -lt $games_count ]];then
+		$'\e[B')
+			if [[ $count -lt $games_count ]];then
 
-                        count=$(( count + 1 ))
-		        display_list
-		    fi
-		;;
-	    $'out')
-		    exit 0;;
-	    $'\0')
-		    echo "STARTING THE GAME"
-		    game_dir=$(dirname "$Game_path")
-		    cd "$game_dir"
-        	    wine "$Game_path" &
-		    exit 0;;
-	    $'sss')
-		    echo "Starting Search : "
-		    read -r term
-		    Search "$term";;
+				count=$(( count + 1 ))
+				display_list
+			fi
+			;;
+		$'out')
+			exit 0;;
+		$'\0')
+			echo "STARTING THE GAME"
+			game_dir=$(dirname "$Game_path")
+			cd "$game_dir"
+			if [[ $c_layer == $proton ]];then
+				"$c_layer" run "$Game_path"
+				exit 0
+			fi
+			$c_layer "$Game_path"
+			exit 0;;
+		$'sss')
+			echo "Starting Search : "
+			read -r term
+			Search "$term";;
+		$'pro')
+			if [[ -d ~/.steam ]];then
+				proton=$(find ~/.steam/root/steamapps/common -name "proton" | sed -n "1 p")
+			else
+				echo "steam folder wasn't found, is steam installed?"
+				exit 255
+			fi
+			if [[ -z $proton ]];then
+				echo "Proton wasn't found, please check if it is installed"
+				exit 255
+			fi
+			echo "Changing to proton"
+			mkdir -p ~/.steam/steam/steamapps/compatdata/shared_prefix
+			export STEAM_COMPAT_DATA_PATH=~/.steam/steam/steamapps/compatdata/shared_prefix
+			export STEAM_COMPAT_CLIENT_INSTALL_PATH=~/.steam/root
+			c_layer="$proton";;
+		$'win')
+			echo "Changing to wine"
+			c_layer=wine;;
 	esac
 
 done
